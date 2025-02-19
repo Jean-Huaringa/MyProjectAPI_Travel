@@ -1,0 +1,74 @@
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.cache
+*.ide
+
+# Build results
+bin/
+obj/
+out/
+
+# Packages
+*.nupkg
+*.snupkg
+packages/
+!packages/*.mdf
+!packages/*.ldf
+
+# Visual Studio Code
+.vscode/
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+*.tmp.*
+
+# Rider
+.idea/
+*.sln.iml
+
+# Database
+*.mdf
+*.ldf
+
+# Environment variables
+.env
+
+# Publish outputs
+wwwroot/
+
+# Dependency directories
+node_modules/
+
+# Resharper
+_ReSharper*/
+*.DotSettings.user
+
+# JetBrains Rider
+.idea/
+
+# macOS specific files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows specific files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Backup files
+*.bak
+*.old
+*.orig
+
+# Others
+*.publishsettings
+*.pubxml
+*.pubxml.user
