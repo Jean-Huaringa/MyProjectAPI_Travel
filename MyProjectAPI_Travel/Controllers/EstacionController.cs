@@ -16,29 +16,50 @@ namespace MyProjectAPI_Travel.Controllers
         [HttpGet]
         public IActionResult GetAllEstacion()
         {
-            var allEstacion = _context.TbStations.ToList();
-            return View(allEstacion);
+            try
+            {
+                if (!User.IsInRole("admin"))
+                {
+                    throw new Exception("Error");
+                }
+
+                var allEstacion = _context.TbStations.Where(e => e.State == true).ToList();
+
+                return Ok(new { mensaje = "" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "", error = ex.Message });
+            }
         }
 
         [HttpGet]
         public IActionResult GetEstacionById(int id)
         {
-            var estacionEntity = _context.TbStations.Find(id);
-            if (estacionEntity is null)
-                return View(new Station());
-            return View(estacionEntity);
-        }
-
-        [HttpGet]
-        public IActionResult AddEstacion()
-        {
             try
             {
-                return View(new Station());
+                if (!User.IsInRole("admin"))
+                {
+                    throw new Exception("Error");
+                }
+
+                if (id <= 0)
+                {
+                    throw new Exception("No se ingreso el numero de la boleta");
+                }
+
+                var estacionEntity = _context.TbStations.Find(id);
+
+                if (estacionEntity is null)
+                {
+                    throw new Exception("El numero de boleta no existe");
+                }
+
+                return Ok(new { mensaje = "" });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { mensaje = "Error al ingresar el bus.", error = ex.Message });
+                return StatusCode(500, new { mensaje = "", error = ex.Message });
             }
         }
 
@@ -47,6 +68,11 @@ namespace MyProjectAPI_Travel.Controllers
         {
             try
             {
+                if (model is null)
+                {
+                    throw new Exception("");
+                }
+
                 var estacionEntity = new Station()
                 {
                     City = model.City,
@@ -57,34 +83,11 @@ namespace MyProjectAPI_Travel.Controllers
                 _context.TbStations.Add(estacionEntity);
                 _context.SaveChanges();
 
-                return View(estacionEntity);
+                return Ok(new { mensaje = "" });
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { mensaje = "Error al ingresar el bus.", error = ex.Message });
-            }
-        }
-
-        [HttpGet]
-        public IActionResult UpdateEstacion(int id)
-        {
-            if (!User.IsInRole("admin"))
-            {
-                return RedirectToAction("Home", "User");
-            }
-            try
-            {
-                var estacionEntity = _context.TbStations.Find(id);
-                if (estacionEntity is null)
-                    return NotFound();
-
-                _context.SaveChanges();
-
-                return View(estacionEntity);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = "Error al actualizar el bus.", error = ex.Message });
             }
         }
 
@@ -93,13 +96,16 @@ namespace MyProjectAPI_Travel.Controllers
         {
             if (!User.IsInRole("admin"))
             {
-                return RedirectToAction("Home", "User");
+                throw new Exception("Error");
             }
             try
             {
                 var estacionEntity = _context.TbStations.Find(id);
+
                 if (estacionEntity is null)
-                    return NotFound();
+                {
+                    throw new Exception("");
+                }
 
                 estacionEntity.City = model.City;
                 estacionEntity.Street = model.Street;
@@ -107,7 +113,7 @@ namespace MyProjectAPI_Travel.Controllers
 
                 _context.SaveChanges();
 
-                return View(estacionEntity);
+                return Ok(new { mensaje = "" });
             }
             catch (Exception ex)
             {

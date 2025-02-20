@@ -16,91 +16,98 @@ namespace MyProjectAPI_Travel.Controllers
         [HttpGet]
         public IActionResult GetAllBus()
         {
-            var allBus = _context.TbBus.ToList();
-            return View(allBus);
+            try
+            {
+                if (!User.IsInRole("admin"))
+                {
+                    throw new Exception("Error");
+                }
+
+                var allBus = _context.TbBus.Where(e => e.State == true).ToList();
+
+                return Ok(new { mensaje = "" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "", error = ex.Message });
+            }
         }
 
         [HttpGet]
         public IActionResult GetBusById(int id)
         {
-            var busEntity = _context.TbBus.Find(id);
-            if (busEntity is null)
-                return View(new Bus());
-            return View(busEntity);
-        }
-
-        [HttpGet]
-        public IActionResult AddBus()
-        {
             try
             {
-                return View(new Bus());
+                if (!User.IsInRole("admin"))
+                {
+                    throw new Exception("Error");
+                }
+
+                if (id <= 0)
+                {
+                    throw new Exception("No se ingreso el numero de la boleta");
+                }
+
+                var busEntity = _context.TbBus.Find(id);
+
+                if (busEntity is null)
+                {
+                    throw new Exception("El numero de boleta no existe");
+                }
+
+                return Ok(new { mensaje = "" });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { mensaje = "Error al ingresar el bus.", error = ex.Message });
+                return StatusCode(500, new { mensaje = "", error = ex.Message });
             }
         }
 
         [HttpPost]
-        public IActionResult AddBus(Bus bus)
+        public IActionResult AddBus(Bus model)
         {
             try
             {
+                if (model is null)
+                {
+                    throw new Exception("");
+                }
+
                 var busEntity = new Bus()
                 {
-                    Placa = bus.Placa,
-                    Model = bus.Model,
-                    NumColumns = bus.NumColumns,
-                    NumRows = bus.NumRows
+                    Placa = model.Placa,
+                    Model = model.Model,
+                    NumColumns = model.NumColumns,
+                    NumRows = model.NumRows
                 };
 
                 _context.TbBus.Add(busEntity);
                 _context.SaveChanges();
 
-                return View(busEntity);
+                return Ok(new { mensaje = "" });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { mensaje = "Error al ingresar el bus.", error = ex.Message });
-            }
-        }
-
-        [HttpGet]
-        public IActionResult UpdateBus(int id)
-        {
-            if (!User.IsInRole("admin"))
-            {
-                return RedirectToAction("Error", "MensajeError");
-            }
-            try
-            {
-                var busEntity = _context.TbBus.Find(id);
-                if (busEntity is null)
-                    return NotFound();
-
-                _context.SaveChanges();
-
-                return View(busEntity);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = "Error al actualizar el bus.", error = ex.Message });
+                return StatusCode(500, new { mensaje = "", error = ex.Message });
             }
         }
 
         [HttpPost]
         public IActionResult UpdateBus(int id, Bus bus)
         {
-            if (!User.IsInRole("admin"))
-            {
-                return RedirectToAction("Home", "User");
-            }
             try
             {
+                if (!User.IsInRole("admin"))
+                {
+                    throw new Exception("Error");
+                }
+
                 var busEntity = _context.TbBus.Find(id);
                 if (busEntity is null)
-                    return NotFound();
+                {
+                    throw new Exception("");
+                }
+
                 busEntity.Placa = bus.Placa;
                 busEntity.Model = bus.Model;
                 busEntity.NumColumns = bus.NumColumns;
@@ -108,11 +115,11 @@ namespace MyProjectAPI_Travel.Controllers
 
                 _context.SaveChanges();
 
-                return View(busEntity);
+                return Ok(new { mensaje = "" });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { mensaje = "Error al actualizar el bus.", error = ex.Message });
+                return StatusCode(500, new { mensaje = "", error = ex.Message });
             }
         }
 
@@ -158,54 +165,61 @@ namespace MyProjectAPI_Travel.Controllers
                 }
             }
 
-            ViewBag.Asientos = addAsiento;
+            busEntity.Seating = addAsiento;
+
             return View(busEntity);
         }
 
         [HttpPost]
         public IActionResult AddBusSeats(List<string> asiento, int idBus)
         {
-            if (asiento == null || !asiento.Any())
+            try
             {
-                return BadRequest("La lista de asientos no puede estar vacía.");
-            }
-
-            if (idBus <= 0)
-            {
-                return BadRequest("El ID del bus no es válido.");
-            }
-
-
-            var existingSeats = _context.TbSeating
-                .Where(e => e.IdBus == idBus)
-                .Select(e => new { e.Column, e.Row})
-                .ToHashSet();
-
-            foreach (var item in asiento)
-            {
-                var datos = item.Split('-');
-                int columna = int.Parse(datos[0]);
-                int fila = int.Parse(datos[1]);
-
-                bool exists = existingSeats.Contains(new { Column = columna, Row = fila });
-
-                if (!exists)
+                if (asiento == null || !asiento.Any())
                 {
-                    Seat asi = new Seat()
-                    {
-                        Column = columna,
-                        Row = fila,
-                        IdBus = idBus,
-                        Type = "1"
-                    };
-
-                    _context.TbSeating.Add(asi); 
+                    throw new Exception("La lista de asientos no puede estar vacía.");
                 }
 
-                _context.SaveChanges();
-            }
+                if (idBus <= 0)
+                {
+                    throw new Exception("El ID del bus no es válido.");
+                }
 
-            return RedirectToAction("SearchForPassage", "Pasajes");
+                var existingSeats = _context.TbSeating
+                    .Where(e => e.IdBus == idBus)
+                    .Select(e => new { e.Column, e.Row })
+                    .ToHashSet();
+
+                foreach (var item in asiento)
+                {
+                    var datos = item.Split('-');
+                    int columna = int.Parse(datos[0]);
+                    int fila = int.Parse(datos[1]);
+
+                    bool exists = existingSeats.Contains(new { Column = columna, Row = fila });
+
+                    if (!exists)
+                    {
+                        Seat asi = new Seat()
+                        {
+                            Column = columna,
+                            Row = fila,
+                            IdBus = idBus,
+                            Type = "1"
+                        };
+
+                        _context.TbSeating.Add(asi);
+
+                        _context.SaveChanges();
+                    }
+                }
+
+                return Ok(new { mensaje = "" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "", error = ex.Message });
+            }
         }
     }
 }

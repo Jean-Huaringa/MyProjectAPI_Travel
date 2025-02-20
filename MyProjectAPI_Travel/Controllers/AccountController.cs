@@ -15,7 +15,6 @@ namespace MyProjectAPI_Travel.Controllers
         private readonly MyProjectTravelContext _context;
         private readonly PasswordHasher<User> _passwordHasher = new PasswordHasher<User>();
 
-
         public AccountController(MyProjectTravelContext context)
         {
             _context = context;
@@ -34,57 +33,53 @@ namespace MyProjectAPI_Travel.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(string username, string password)
         {
-
-            var user = _context.TbUsers
-                .Include(u => u.Worker)
-                .FirstOrDefault(u => u.Mail == username);
-
-            if (user == null)
+            try
             {
-                Debug.WriteLine("Contraseña incorrecta.");
-                ViewBag.Error = "Usuario o contraseña incorrectos";
-                return View();
-            }
+                var user = _context.TbUsers
+                    .Include(u => u.Worker)
+                    .FirstOrDefault(u => u.Mail == username);
 
-            var passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.Password, password);
+                if (user == null)
+                {
+                    throw new Exception("Usuario o contraseña incorrectos");
+                }
 
-            if (passwordVerificationResult != PasswordVerificationResult.Success)
-            {
-                Debug.WriteLine("Contraseña incorrecta.");
-                ViewBag.Error = "Usuario o contraseña incorrectos";
-                return View();
-            }
-            var rol = "";
+                var passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.Password, password);
 
-            if (user.Worker != null)
-            {
-                rol = user.Worker.Role;
-            }
-            else
-            {
-                rol = "invitado"; 
-            }
+                if (passwordVerificationResult != PasswordVerificationResult.Success)
+                {
+                    throw new Exception("Usuario o contraseña incorrectos");
+                    throw new Exception("");
+                }
 
-            var claims = new List<Claim>
+                //Aqui se usara el operador (operador null-coalescing) donde si el primer parametro obtiene null se accedera al siguiente
+                var role = user.Worker?.Role ?? "invitado"; // user.Worker?.Role aqui si worker es null rebotara null y se accedera al siguiente parametro 
+
+                var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.IdUsr.ToString()),
                 new Claim(ClaimTypes.Name, user.UserName),
                 new Claim(ClaimTypes.Email, user.Mail),
-                new Claim(ClaimTypes.Role, rol)
+                new Claim(ClaimTypes.Role, role)
             };
 
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            var principal = new ClaimsPrincipal(identity);
+                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var principal = new ClaimsPrincipal(identity);
 
-            var authProperties = new AuthenticationProperties
+                var authProperties = new AuthenticationProperties
+                {
+                    IsPersistent = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(30)
+                };
+
+                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
+
+                return Ok();
+            }
+            catch (Exception ex)
             {
-                IsPersistent = true,
-                ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(30)
-            };
-
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
-
-            return RedirectToAction("SearchForPassage", "Pasajes");
+                return NotFound();
+            }
         }
 
         public async Task<IActionResult> Logout()
@@ -94,45 +89,58 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpGet]
-        public IActionResult Register()
+        public async Task<IActionResult> Register()
         {
-            if (User.Identity.IsAuthenticated)
+            try
             {
-                return RedirectToAction("Filter", "Itinerario");
+                if (User.Identity.IsAuthenticated)
+                {
+                    throw new Exception("A ocurrido un problema");
+                }
+                return Ok();
             }
-            return View();
+            catch (Exception ex)
+            {
+                return NotFound(ex);
+            }
         }
 
         [HttpPost]
         public IActionResult Register(User model)
         {
-            var existingUser = _context.TbUsers.FirstOrDefault(u => u.Mail == model.Mail || u.NumDocument == model.NumDocument);
-            if (existingUser != null)
+            try
             {
-                ViewBag.Error = "El correo o DNI ya está registrado.";
-                return View(model);
+                var existingUser = _context.TbUsers.FirstOrDefault(u => u.Mail == model.Mail || u.NumDocument == model.NumDocument);
+                if (existingUser != null)
+                {
+                    throw new Exception("El correo o DNI ya está registrado");
+                }
+
+                string passwordHash = _passwordHasher.HashPassword(model, model.Password);
+
+                var newUser = new User()
+                {
+                    UserName = model.UserName,
+                    Lastname = model.Lastname,
+                    Phone = model.Phone,
+                    Birthdate = model.Birthdate,
+                    TypeDocument = model.TypeDocument,
+                    NumDocument = model.NumDocument,
+                    Mail = model.Mail,
+                    Password = passwordHash
+                };
+
+                _context.TbUsers.Add(newUser);
+                _context.SaveChanges();
+
+                return Ok();
             }
-
-            string passwordHash = _passwordHasher.HashPassword(model, model.Password);
-
-            var newUser = new User()
+            catch (Exception ex)
             {
-                UserName = model.UserName,
-                Lastname = model.Lastname,
-                Phone = model.Phone,
-                Birthdate = model.Birthdate,
-                TypeDocument = model.TypeDocument,
-                NumDocument = model.NumDocument,
-                Mail = model.Mail,
-                Password = passwordHash
-            };
-
-            _context.TbUsers.Add(newUser);
-            _context.SaveChanges();
-
-            return RedirectToAction("Login");
+                return NotFound(ex);
+            }
         }
-        
+
         [HttpGet]
         public IActionResult UpdateUser()
         {
@@ -144,55 +152,75 @@ namespace MyProjectAPI_Travel.Controllers
         [HttpPost]
         public IActionResult UpdateUser(User model)
         {
-            if (model == null)
+            try 
             {
-                return NotFound(new { message = "Hemos encontrado problemas con tu usuario" });
+                if (model == null)
+                {
+                    throw new Exception("Hemos encontrado problemas con tu usuario");
+                }
+
+                var userEntity = VerificarSesion();
+
+                userEntity.UserName = model.UserName;
+                userEntity.Lastname = model.Lastname;
+                userEntity.Phone = model.Phone;
+
+                _context.TbUsers.Update(userEntity);
+                _context.SaveChanges();
+
+                return Ok();
             }
-
-            var userEntity = VerificarSesion();
-
-            userEntity.UserName = model.UserName;
-            userEntity.Lastname = model.Lastname;
-            userEntity.Phone = model.Phone;
-
-            _context.TbUsers.Update(userEntity);
-            _context.SaveChanges();
-
-            return RedirectToAction("SearchUser");
+            catch (Exception ex)
+            {
+                return NotFound(ex);
+            }
         }
 
         [HttpGet]
         public IActionResult UpdatePassword()
         {
-            if (!User.Identity.IsAuthenticated)
+            try
             {
-                return RedirectToAction("Filter", "Itinerario");
+                if (User.Identity.IsAuthenticated)
+                {
+                    throw new Exception("A ocurrido un problema");
+                }
+                return Ok();
             }
-            return View();
+            catch (Exception ex)
+            {
+                return NotFound(ex);
+            }
         }
 
         [HttpPost]
         public IActionResult UpdatePassword(string oldPassword, string newPassword)
         {
-            var existingUser = VerificarSesion();
-
-            var passwordVerificationResult = _passwordHasher.VerifyHashedPassword(existingUser, existingUser.Password, oldPassword);
-
-            if (passwordVerificationResult != PasswordVerificationResult.Success)
+            try
             {
-                ViewBag.Error = "Usuario o contraseña incorrectos";
-                return View();
-            }
+                var existingUser = VerificarSesion();
 
-            if (!string.IsNullOrEmpty(newPassword))
+                var passwordVerificationResult = _passwordHasher.VerifyHashedPassword(existingUser, existingUser.Password, oldPassword);
+
+                if (passwordVerificationResult != PasswordVerificationResult.Success)
+                {
+                    throw new Exception("Usuario o contraseña incorrectos");
+                }
+
+                if (!string.IsNullOrEmpty(newPassword))
+                {
+                    existingUser.Password = _passwordHasher.HashPassword(existingUser, newPassword);
+                }
+
+                _context.TbUsers.Update(existingUser);
+                _context.SaveChanges();
+
+                return Ok();
+            }
+            catch (Exception ex)
             {
-                existingUser.Password = _passwordHasher.HashPassword(existingUser, newPassword);
+                return NotFound(ex);
             }
-
-            _context.TbUsers.Update(existingUser);
-            _context.SaveChanges();
-
-            return RedirectToAction("Login");
         }
 
         [HttpGet]
@@ -205,7 +233,7 @@ namespace MyProjectAPI_Travel.Controllers
             }
             catch (Exception ex)
             {
-                return RedirectToAction("SearchForPassage", "Pasajes");
+                return NotFound(ex);
             }
         }
 

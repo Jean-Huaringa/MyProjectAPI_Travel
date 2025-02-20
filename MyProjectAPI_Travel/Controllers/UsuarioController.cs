@@ -18,29 +18,49 @@ namespace MyProjectAPI_Travel.Controllers
         [HttpGet]
         public IActionResult GetAllUsuario()
         {
-            var allUsuario = _context.TbUsers.ToList();
-            return View(allUsuario);
+            try
+            {
+                if (!User.IsInRole("admin"))
+                {
+                    throw new Exception("Error");
+                }
+
+                var allUsuario = _context.TbUsers.Where(e => e.State == true).ToList();
+
+                return Ok(new { mensaje = "" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "", error = ex.Message });
+            }
         }
 
         [HttpGet]
         public IActionResult GetUsuarioById(int id)
         {
-            var UsuarioEntity = _context.TbUsers.Find(id);
-            if (UsuarioEntity is null)
-                return View(new User());
-            return View(UsuarioEntity);
-        }
-
-        [HttpGet]
-        public IActionResult AddUsuario()
-        {
             try
             {
-                return View(new User());
+                if (!User.IsInRole("admin"))
+                {
+                    throw new Exception("Error");
+                }
+
+                if (id <= 0)
+                {
+                    throw new Exception("No se ingreso el numero de la boleta");
+                }
+
+                var UsuarioEntity = _context.TbUsers.Find(id);
+
+                if (UsuarioEntity is null)
+                {
+                    throw new Exception("El numero de boleta no existe");
+                }
+                return Ok();
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { mensaje = "Error al ingresar el bus.", error = ex.Message });
+                return StatusCode(500, new { mensaje = "", error = ex.Message });
             }
         }
 
@@ -49,6 +69,15 @@ namespace MyProjectAPI_Travel.Controllers
         {
             try
             {
+                if (!User.IsInRole("admin"))
+                {
+                    throw new Exception("Error");
+                }
+
+                if (model is null)
+                {
+                    throw new Exception("");
+                }
                 var UsuarioEntity = new User()
                 {
                     UserName = model.UserName,
@@ -72,41 +101,22 @@ namespace MyProjectAPI_Travel.Controllers
             }
         }
 
-        [HttpGet]
-        public IActionResult UpdateUsuario(int id)
-        {
-            if (!User.IsInRole("admin"))
-            {
-                return RedirectToAction("Home", "User");
-            }
-            try
-            {
-                var UsuarioEntity = _context.TbUsers.Find(id);
-                if (UsuarioEntity is null)
-                    return NotFound();
-
-                _context.SaveChanges();
-
-                return View(UsuarioEntity);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = "Error al actualizar el bus.", error = ex.Message });
-            }
-        }
-
         [HttpPost]
         public IActionResult UpdateUsuario(int id, User model)
         {
-            if (!User.IsInRole("admin"))
-            {
-                return RedirectToAction("Home", "User");
-            }
             try
             {
+                if (!User.IsInRole("admin"))
+                {
+                    throw new Exception("Error");
+                }
+
                 var UsuarioEntity = _context.TbUsers.Find(id);
+
                 if (UsuarioEntity is null)
-                    return NotFound();
+                {
+                    throw new Exception("");
+                }
 
                 UsuarioEntity.UserName = model.UserName;
                 UsuarioEntity.Lastname = model.Lastname;
@@ -119,7 +129,7 @@ namespace MyProjectAPI_Travel.Controllers
 
                 _context.SaveChanges();
 
-                return View(UsuarioEntity);
+                return Ok();
             }
             catch (Exception ex)
             {

@@ -16,67 +16,68 @@ namespace MyProjectAPI_Travel.Controllers
         [HttpGet]
         public IActionResult GetAllBoleto()
         {
-            var allBoleto = _context.TbTickets.ToList();
-            return View(allBoleto);
+            try
+            {
+                if (!User.IsInRole("admin"))
+                {
+                    throw new Exception("Error");
+                }
+
+                var allBoleto = _context.TbTickets.Where(e => e.State == true).ToList();
+
+                return Ok(new { mensaje = "" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "", error = ex.Message });
+            }
         }
 
         [HttpGet]
         public IActionResult GetBoletoById(int id)
         {
-            var BoletoEntity = _context.TbTickets.Find(id);
-            if (BoletoEntity is null)
-                return View(new Ticket());
-            return View(BoletoEntity);
-        }
-
-        [HttpGet]
-        public IActionResult AddBoleto()
-        {
             try
             {
-                return View(new Ticket());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = "Error al ingresar el bus.", error = ex.Message });
-            }
-        }
+                if (!User.IsInRole("admin"))
+                {
+                    throw new Exception("Error");
+                }
 
-        [HttpGet]
-        public IActionResult UpdateBoleto(int id)
-        {
-            if (!User.IsInRole("Admin"))
-            {
-                return RedirectToAction("Home", "User");
-            }
-            try
-            {
+                if (id <= 0)
+                {
+                    throw new Exception("No se ingreso el numero de la boleta");
+                }
+
                 var BoletoEntity = _context.TbTickets.Find(id);
+
                 if (BoletoEntity is null)
-                    return NotFound();
-
-                _context.SaveChanges();
-
-                return View(BoletoEntity);
+                {
+                    throw new Exception("El numero de boleta no existe");
+                }
+                return Ok();
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { mensaje = "Error al actualizar el bus.", error = ex.Message });
+                return StatusCode(500, new { mensaje = "", error = ex.Message });
             }
         }
 
         [HttpPost]
         public IActionResult UpdateBoleto(int id, Ticket model)
         {
-            if (!User.IsInRole("Admin"))
-            {
-                return RedirectToAction("Home", "User");
-            }
             try
             {
+                if (!User.IsInRole("admin"))
+                {
+                    throw new Exception("Error");
+                }
+
                 var BoletoEntity = _context.TbTickets.Find(id);
+
                 if (BoletoEntity is null)
-                    return NotFound();
+                {
+                    throw new Exception("El numero de boleta no existe");
+                }
 
                 BoletoEntity.IdUsr = model.IdUsr;
                 BoletoEntity.IdWrk = model.IdWrk;
@@ -98,7 +99,7 @@ namespace MyProjectAPI_Travel.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { mensaje = "Error al actualizar el bus.", error = ex.Message });
+                return StatusCode(500, new { mensaje = "", error = ex.Message });
             }
         }
 
