@@ -18,36 +18,67 @@ namespace MyProjectAPI_Travel.Controllers
         [HttpGet]
         public IActionResult GetAllTrabajador()
         {
-            if (!User.IsInRole("admin"))
+            try
             {
-                return RedirectToAction("Error", "MensajeError");
+                if (!User.IsInRole("admin"))
+                {
+                    throw new Exception("Error");
+                }
+
+                var allTrabajador = _context.TbWorkers.Where(e => e.State == true).ToList();
+
+                return Ok(new { mensaje = "" });
             }
-            var allTrabajador= _context.TbWorkers.ToList();
-            return View(allTrabajador);
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "", error = ex.Message });
+            }
         }
 
         [HttpGet]
         public IActionResult GetTrabajadorById(int id)
         {
-            if (!User.IsInRole("admin"))
+            try
             {
-                return RedirectToAction("Error", "MensajeError");
+                if (!User.IsInRole("admin"))
+                {
+                    throw new Exception("Error");
+                }
+
+                if (id <= 0)
+                {
+                    throw new Exception("No se ingreso el numero de la boleta");
+                }
+
+                var trabajadorEntity = _context.TbWorkers.Find(id);
+
+                if (trabajadorEntity is null)
+                {
+                    throw new Exception("El numero de boleta no existe");
+                }
+                return Ok();
             }
-            var trabajadorEntity = _context.TbWorkers.Find(id);
-            if (trabajadorEntity is null)
-                return View(new Worker());
-            return View(trabajadorEntity);
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "", error = ex.Message });
+            }
         }
 
         [HttpPost]
         public IActionResult AddTrabajador(Worker model)
         {
-            if (!User.IsInRole("admin"))
-            {
-                return RedirectToAction("Error", "MensajeError");
-            }
             try
             {
+                if (!User.IsInRole("admin"))
+                {
+                    throw new Exception("Error");
+                }
+
+                if (model is null)
+                {
+                    throw new Exception("");
+                }
+
                 var trabajadorEntity = new Worker()
                 {
                     Salary = model.Salary
@@ -64,47 +95,28 @@ namespace MyProjectAPI_Travel.Controllers
             }
         }
 
-        [HttpGet]
-        public IActionResult UpdateTrabajador(int id)
-        {
-            if (!User.IsInRole("admin"))
-            {
-                return RedirectToAction("Error", "MensajeError");
-            }
-            try
-            {
-                var trabajadorEntity = _context.TbWorkers.Find(id);
-                if (trabajadorEntity is null)
-                    return NotFound();
-
-                _context.SaveChanges();
-
-                return View(trabajadorEntity);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = "Error al actualizar el bus.", error = ex.Message });
-            }
-        }
-
         [HttpPost]
         public IActionResult UpdateTrabajador(int id, Worker model)
         {
-            if (!User.IsInRole("admin"))
-            {
-                return RedirectToAction("Error", "MensajeError");
-            }
             try
             {
+                if (!User.IsInRole("admin"))
+                {
+                    throw new Exception("Error");
+                }
+
                 var trabajadorEntity = _context.TbWorkers.Find(id);
+
                 if (trabajadorEntity is null)
-                    return NotFound();
+                {
+                    throw new Exception("");
+                }
 
                 trabajadorEntity.Salary = model.Salary;
 
                 _context.SaveChanges();
 
-                return View(trabajadorEntity);
+                return Ok(new { mensaje = "" });
             }
             catch (Exception ex)
             {

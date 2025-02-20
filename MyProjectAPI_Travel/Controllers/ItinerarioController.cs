@@ -32,6 +32,11 @@ namespace MyProjectAPI_Travel.Controllers
         [HttpGet]
         public IActionResult GetItinerarioById(int id)
         {
+            if (id <= 0)
+            {
+                Console.WriteLine("El objeto es null.");
+            }
+
             var ItinerarioEntity = _context.TbItineraries
                 .Include(r => r.Origin)
                 .Include(d => d.Destination)
@@ -74,6 +79,11 @@ namespace MyProjectAPI_Travel.Controllers
         {
             try
             {
+                if (model is null)
+                {
+                    Console.WriteLine("El objeto es null.");
+                }
+
                 var ItinerarioEntity = new Itinerary()
                 {
                     IdOrigin = model.IdOrigin,
@@ -105,6 +115,11 @@ namespace MyProjectAPI_Travel.Controllers
             }
             try
             {
+                if (id <= 0)
+                {
+                    Console.WriteLine("El objeto es null.");
+                }
+
                 var ItinerarioEntity = _context.TbItineraries
                 .Include(r => r.Origin)
                 .Include(d => d.Destination)
@@ -144,6 +159,15 @@ namespace MyProjectAPI_Travel.Controllers
             }
             try
             {
+                if(id <= 0)
+                {
+                    Console.WriteLine("El objeto es null.");
+                }
+                if (model is null)
+                {
+                    Console.WriteLine("El objeto es null.");
+                }
+
                 var ItinerarioEntity = _context.TbItineraries.Find(id);
                 if (ItinerarioEntity is null)
                     return NotFound();
@@ -169,6 +193,11 @@ namespace MyProjectAPI_Travel.Controllers
         [HttpDelete]
         public IActionResult DeleteItinerario(int id)
         {
+            if (id <= 0)
+            {
+                Console.WriteLine("El objeto es null.");
+            }
+
             var ItinerarioEntity = _context.TbItineraries.Find(id);
             if (ItinerarioEntity is null)
                 return NotFound();
