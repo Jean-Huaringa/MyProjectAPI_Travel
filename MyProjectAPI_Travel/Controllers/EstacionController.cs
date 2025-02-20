@@ -1,135 +1,167 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MyProjectAPI_Travel.Data;
 using MyProjectAPI_Travel.Models;
+using MyProjectAPI_Travel.Models.DTO;
 
-namespace MyProjectAPI_Travel.Controllers
+namespace MyProjectAPI_Travel.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class EstacionController : ControllerBase
 {
-    public class EstacionController : Controller
+    private readonly MyProjectTravelContext _context;
+
+    public EstacionController(MyProjectTravelContext context)
     {
-        private readonly MyProjectTravelContext _context;
+        _context = context;
+    }
 
-        public EstacionController(MyProjectTravelContext context)
+    [HttpGet("all")]
+    public IActionResult GetAllEstacion()
+    {
+        try
         {
-            _context = context;
+            var estaciones = _context.TbStations
+                .Where(e => e.State == true)
+                .Select(e => new
+                {
+                    e.IdStn,
+                    e.City,
+                    e.Street,
+                    e.Pseudonym
+                })
+                .ToList();
+
+            return Ok(estaciones);
         }
-
-        [HttpGet]
-        public IActionResult GetAllEstacion()
+        catch (Exception ex)
         {
-            try
-            {
-                if (!User.IsInRole("admin"))
-                {
-                    throw new Exception("Error");
-                }
-
-                var allEstacion = _context.TbStations.Where(e => e.State == true).ToList();
-
-                return Ok(new { mensaje = "" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = "", error = ex.Message });
-            }
+            return StatusCode(500, new { mensaje = "Error al obtener las estaciones.", error = ex.Message });
         }
+    }
 
-        [HttpGet]
-        public IActionResult GetEstacionById(int id)
+    [HttpGet("{id:int}")]
+    public IActionResult GetEstacionById(int id)
+    {
+        try
         {
-            try
+            if (id <= 0)
             {
-                if (!User.IsInRole("admin"))
-                {
-                    throw new Exception("Error");
-                }
-
-                if (id <= 0)
-                {
-                    throw new Exception("No se ingreso el numero de la boleta");
-                }
-
-                var estacionEntity = _context.TbStations.Find(id);
-
-                if (estacionEntity is null)
-                {
-                    throw new Exception("El numero de boleta no existe");
-                }
-
-                return Ok(new { mensaje = "" });
+                return BadRequest(new { mensaje = "No se ingreso el ID." });
             }
-            catch (Exception ex)
+
+            var estacion = _context.TbStations
+                .Where(e => e.IdStn == id && e.State == true)
+                .Select(e => new
+                {
+                    e.IdStn,
+                    e.City,
+                    e.Street,
+                    e.Pseudonym
+                })
+                .FirstOrDefault();
+
+            if (estacion == null)
             {
-                return StatusCode(500, new { mensaje = "", error = ex.Message });
+                return NotFound(new { mensaje = "Estación no encontrada." });
             }
+
+            return Ok(estacion);
         }
-
-        [HttpPost]
-        public IActionResult AddEstacion(Station model)
+        catch (Exception ex)
         {
-            try
-            {
-                if (model is null)
-                {
-                    throw new Exception("");
-                }
-
-                var estacionEntity = new Station()
-                {
-                    City = model.City,
-                    Street = model.Street,
-                    Pseudonym = model.Pseudonym
-                };
-
-                _context.TbStations.Add(estacionEntity);
-                _context.SaveChanges();
-
-                return Ok(new { mensaje = "" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = "Error al ingresar el bus.", error = ex.Message });
-            }
+            return StatusCode(500, new { mensaje = "Error al obtener la estación.", error = ex.Message });
         }
+    }
 
-        [HttpPost]
-        public IActionResult UpdateEstacion(int id, Station model)
+    [HttpPost("add")]
+    [Authorize(Roles = "admin")]
+    public IActionResult AddEstacion([FromBody] StationDTO model)
+    {
+        try
         {
-            if (!User.IsInRole("admin"))
+            if (!ModelState.IsValid)
             {
-                throw new Exception("Error");
+                return BadRequest(ModelState);
             }
-            try
+
+            var estacion = new Station
             {
-                var estacionEntity = _context.TbStations.Find(id);
+                City = model.City,
+                Street = model.Street,
+                Pseudonym = model.Pseudonym,
+                State = true
+            };
 
-                if (estacionEntity is null)
-                {
-                    throw new Exception("");
-                }
-
-                estacionEntity.City = model.City;
-                estacionEntity.Street = model.Street;
-                estacionEntity.Pseudonym = model.Pseudonym;
-
-                _context.SaveChanges();
-
-                return Ok(new { mensaje = "" });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = "Error al actualizar el bus.", error = ex.Message });
-            }
-        }
-
-        [HttpPost]
-        public IActionResult DeleteEstacion(int id)
-        {
-            var estacionEntity = _context.TbStations.Find(id);
-            if (estacionEntity is null)
-                return NotFound();
-            _context.TbStations.Remove(estacionEntity);
+            _context.TbStations.Add(estacion);
             _context.SaveChanges();
-            return Ok();
+
+            return Ok(new { mensaje = "Estación agregada correctamente." });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensaje = "Error al agregar la estación.", error = ex.Message });
+        }
+    }
+
+    [HttpPut("update/{id:int}")]
+    [Authorize(Roles = "admin")]
+    public IActionResult UpdateEstacion(int id, [FromBody] StationDTO model)
+    {
+        try
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new { mensaje = "No se ingreso el ID." });
+            }
+
+            var estacion = _context.TbStations.Find(id);
+
+            if (estacion == null)
+            {
+                return NotFound(new { mensaje = "Estación no encontrada." });
+            }
+
+            estacion.City = model.City;
+            estacion.Street = model.Street;
+            estacion.Pseudonym = model.Pseudonym;
+
+            _context.SaveChanges();
+
+            return Ok(new { mensaje = "Estación actualizada correctamente." });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensaje = "Error al actualizar la estación.", error = ex.Message });
+        }
+    }
+
+    [HttpDelete("delete/{id:int}")]
+    [Authorize(Roles = "admin")]
+    public IActionResult DeleteEstacion(int id)
+    {
+        try
+        {
+            if (id <= 0)
+            {
+                return BadRequest(new { mensaje = "No se ingreso el ID." });
+            }
+
+            var estacion = _context.TbStations.Find(id);
+
+            if (estacion == null)
+                return NotFound(new { mensaje = "Estación no encontrada." });
+
+            estacion.State = false;
+
+            _context.SaveChanges();
+
+            return Ok(new { mensaje = "Estación eliminada correctamente." });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { mensaje = "Error al eliminar la estación.", error = ex.Message });
         }
     }
 }

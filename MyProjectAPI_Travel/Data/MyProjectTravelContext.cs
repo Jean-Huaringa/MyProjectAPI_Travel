@@ -107,11 +107,10 @@ public partial class MyProjectTravelContext : DbContext
             entity.Property(e => e.Availability).HasDefaultValue(true);
             entity.Property(e => e.RegistrationDate).HasDefaultValueSql("(getdate())");
 
-            entity.HasOne(d => d.Users)
-                .WithOne(p => p.Worker)
-                .HasForeignKey<Worker>(d => d.IdWrk)
-                .OnDelete(DeleteBehavior.ClientSetNull)
-                .HasConstraintName("FK_tb_worker_user");
+            entity.HasOne(d => d.User)
+            .WithOne(p => p.Worker)
+            .HasForeignKey<Worker>(d => d.IdWrk)
+            .OnDelete(DeleteBehavior.ClientSetNull);
 
         });
 

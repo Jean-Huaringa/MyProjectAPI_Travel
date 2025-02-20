@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace MyProjectAPI_Travel.Models
 {
@@ -50,13 +51,13 @@ namespace MyProjectAPI_Travel.Models
         [ForeignKey("IdBus")]
         public virtual Bus Bus { get; set; } = null!;
 
-        [ForeignKey("IdDestino")]
+        [ForeignKey("IdDestination")]
         public virtual Station Destination { get; set; } = null!;
 
-        [ForeignKey("IdOrigen")]
+        [ForeignKey("IdOrigin")]
         public virtual Station Origin { get; set; } = null!;
 
-        [ForeignKey("IdTbj")]
+        [ForeignKey("IdWrk")]
         public virtual Worker Worker { get; set; } = null!;
 
     }

@@ -2,11 +2,14 @@
 using Microsoft.AspNetCore.Mvc;
 using MyProjectAPI_Travel.Data;
 using MyProjectAPI_Travel.Models;
+using MyProjectAPI_Travel.Models.DTO;
 
 namespace MyProjectAPI_Travel.Controllers
 {
-    [Authorize(Roles = "admin")]
-    public class TrabajadorController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    //[Authorize(Roles = "admin,manager")]
+    public class TrabajadorController : ControllerBase
     {
         private readonly MyProjectTravelContext _context;
 
@@ -15,7 +18,8 @@ namespace MyProjectAPI_Travel.Controllers
             _context = context;
         }
 
-        [HttpGet]
+        [HttpGet("all")]
+        [Authorize(Roles = "admin")]
         public IActionResult GetAllTrabajador()
         {
             try
@@ -35,19 +39,15 @@ namespace MyProjectAPI_Travel.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpGet("{id:int}")]
+        [Authorize(Roles = "admin")]
         public IActionResult GetTrabajadorById(int id)
         {
             try
             {
-                if (!User.IsInRole("admin"))
-                {
-                    throw new Exception("Error");
-                }
-
                 if (id <= 0)
                 {
-                    throw new Exception("No se ingreso el numero de la boleta");
+                    return BadRequest(new { mensaje = "No se ingreso el ID." });
                 }
 
                 var trabajadorEntity = _context.TbWorkers.Find(id);
@@ -64,73 +64,84 @@ namespace MyProjectAPI_Travel.Controllers
             }
         }
 
-        [HttpPost]
-        public IActionResult AddTrabajador(Worker model)
+        [HttpPost("add")]
+        [Authorize(Roles = "admin")]
+        public IActionResult AddTrabajador(WorkerDTO model)
         {
             try
             {
-                if (!User.IsInRole("admin"))
-                {
-                    throw new Exception("Error");
-                }
+                //if (!User.IsInRole("admin"))
+                //{
+                //    return Ok("No tienes acceso");
+                //}
 
-                if (model is null)
+                if (!ModelState.IsValid)
                 {
-                    throw new Exception("");
+                    return BadRequest(ModelState);
                 }
 
                 var trabajadorEntity = new Worker()
                 {
-                    Salary = model.Salary
+                    IdWrk = model.IdWrk,
+                    Role = model.Role,
+                    Salary = model.Salary,
+                    Availability = false,
+                    State = true
                 };
 
                 _context.TbWorkers.Add(trabajadorEntity);
                 _context.SaveChanges();
 
-                return View(trabajadorEntity);
+                return Ok(new { mensaje = "Se agrego el un nuevo trabajador" });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { mensaje = "Error al ingresar el bus.", error = ex.Message });
+                return StatusCode(500, new { mensaje = "Error al ingresar el nuevo trabajador.", error = ex.Message });
             }
         }
 
-        [HttpPost]
-        public IActionResult UpdateTrabajador(int id, Worker model)
+        [HttpPut("update/{id:int}")]
+        [Authorize(Roles = "admin")]
+        public IActionResult UpdateTrabajador(int id, WorkerDTO model)
         {
             try
             {
-                if (!User.IsInRole("admin"))
+                if (id <= 0)
                 {
-                    throw new Exception("Error");
+                    return BadRequest(new { mensaje = "No se ingreso el ID." });
                 }
 
                 var trabajadorEntity = _context.TbWorkers.Find(id);
 
                 if (trabajadorEntity is null)
                 {
-                    throw new Exception("");
+                    return BadRequest(new { mensaje = "No se pudo obtener datos del trabajador." });
                 }
 
                 trabajadorEntity.Salary = model.Salary;
 
                 _context.SaveChanges();
 
-                return Ok(new { mensaje = "" });
+                return Ok(new { mensaje = "El trabajador se actualizo correctamente." });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { mensaje = "Error al actualizar el bus.", error = ex.Message });
+                return StatusCode(500, new { mensaje = "Error al actualizar el usuario.", error = ex.Message });
             }
         }
 
-        [HttpPost]
+        [HttpDelete("delete/{id:int}")]
+        [Authorize(Roles = "admin")]
         public IActionResult DeleteTrabajador(int id)
         {
+            if (id <= 0)
+            {
+                return BadRequest(new { mensaje = "No se ingreso el ID." });
+            }
             var trabajadorEntity = _context.TbWorkers.Find(id);
             if (trabajadorEntity is null)
                 return NotFound();
-            _context.TbWorkers.Remove(trabajadorEntity);
+            trabajadorEntity.State = false;
             _context.SaveChanges();
             return Ok();
         }

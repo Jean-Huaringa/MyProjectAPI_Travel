@@ -2,11 +2,13 @@
 using Microsoft.AspNetCore.Mvc;
 using MyProjectAPI_Travel.Data;
 using MyProjectAPI_Travel.Models;
+using MyProjectAPI_Travel.Models.DTO;
 
 namespace MyProjectAPI_Travel.Controllers
 {
-    [Authorize(Roles = "admin")]
-    public class UsuarioController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    public class UsuarioController : ControllerBase
     {
         private readonly MyProjectTravelContext _context;
 
@@ -15,19 +17,15 @@ namespace MyProjectAPI_Travel.Controllers
             _context = context;
         }
 
-        [HttpGet]
+        [HttpGet("all")]
+        [Authorize(Roles = "admin")]
         public IActionResult GetAllUsuario()
         {
             try
             {
-                if (!User.IsInRole("admin"))
-                {
-                    throw new Exception("Error");
-                }
-
                 var allUsuario = _context.TbUsers.Where(e => e.State == true).ToList();
 
-                return Ok(new { mensaje = "" });
+                return Ok(allUsuario);
             }
             catch (Exception ex)
             {
@@ -35,19 +33,15 @@ namespace MyProjectAPI_Travel.Controllers
             }
         }
 
-        [HttpGet]
+        [HttpGet("{id:int}")]
+        [Authorize(Roles = "admin")]
         public IActionResult GetUsuarioById(int id)
         {
             try
             {
-                if (!User.IsInRole("admin"))
-                {
-                    throw new Exception("Error");
-                }
-
                 if (id <= 0)
                 {
-                    throw new Exception("No se ingreso el numero de la boleta");
+                    return BadRequest(new { mensaje = "No se ingreso el ID." });
                 }
 
                 var UsuarioEntity = _context.TbUsers.Find(id);
@@ -56,7 +50,7 @@ namespace MyProjectAPI_Travel.Controllers
                 {
                     throw new Exception("El numero de boleta no existe");
                 }
-                return Ok();
+                return Ok(UsuarioEntity);
             }
             catch (Exception ex)
             {
@@ -64,20 +58,17 @@ namespace MyProjectAPI_Travel.Controllers
             }
         }
 
-        [HttpPost]
-        public IActionResult AddUsuario(User model)
+        [HttpPost("add")]
+        [Authorize(Roles = "admin")]
+        public IActionResult AddUsuario([FromBody] UserDTO model)
         {
             try
             {
-                if (!User.IsInRole("admin"))
-                {
-                    throw new Exception("Error");
-                }
-
                 if (model is null)
                 {
-                    throw new Exception("");
+                    return BadRequest(new { mensaje = "El objeto proporcionado es nulo." });
                 }
+
                 var UsuarioEntity = new User()
                 {
                     UserName = model.UserName,
@@ -86,36 +77,36 @@ namespace MyProjectAPI_Travel.Controllers
                     Birthdate = model.Birthdate,
                     TypeDocument = model.TypeDocument,
                     NumDocument = model.NumDocument,
-                    Mail = model.Mail,
-                    Password = model.Password
+                    Mail = model.Mail
                 };
 
                 _context.TbUsers.Add(UsuarioEntity);
                 _context.SaveChanges();
 
-                return View(UsuarioEntity);
+                return Ok(new { mensaje = "Se agrego un nuevo usuario." });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { mensaje = "Error al ingresar el bus.", error = ex.Message });
+                return StatusCode(500, new { mensaje = "Error al ingresar el usuario.", error = ex.Message });
             }
         }
 
-        [HttpPost]
-        public IActionResult UpdateUsuario(int id, User model)
+        [HttpPut("update/{id:int}")]
+        [Authorize(Roles = "admin")]
+        public IActionResult UpdateUsuario(int id, [FromBody] UserDTO model)
         {
             try
             {
-                if (!User.IsInRole("admin"))
+                if (id <= 0)
                 {
-                    throw new Exception("Error");
+                    return BadRequest(new { mensaje = "No se ingreso el ID." });
                 }
 
                 var UsuarioEntity = _context.TbUsers.Find(id);
 
                 if (UsuarioEntity is null)
                 {
-                    throw new Exception("");
+                    return BadRequest(new { mensaje = "No se pudo obtener datos del usuario." });
                 }
 
                 UsuarioEntity.UserName = model.UserName;
@@ -125,11 +116,10 @@ namespace MyProjectAPI_Travel.Controllers
                 UsuarioEntity.TypeDocument = model.TypeDocument;
                 UsuarioEntity.NumDocument = model.NumDocument;
                 UsuarioEntity.Mail = model.Mail;
-                UsuarioEntity.Password = model.Password;
 
                 _context.SaveChanges();
 
-                return Ok();
+                return Ok(new { mensaje = "El usuario se actualizo correctamente." });
             }
             catch (Exception ex)
             {
@@ -137,15 +127,21 @@ namespace MyProjectAPI_Travel.Controllers
             }
         }
 
-        [HttpPost]
+        [HttpDelete("delete/{id:int}")]
+        [Authorize(Roles = "admin")]
         public IActionResult DeleteUsuario(int id)
         {
+            if (id <= 0)
+            {
+                return BadRequest(new { mensaje = "No se ingreso el ID." });
+            }
+
             var UsuarioEntity = _context.TbUsers.Find(id);
             if (UsuarioEntity is null)
-                return NotFound();
-            _context.TbUsers.Remove(UsuarioEntity);
+                return NotFound(new { mensaje = "Usuario no encontrado." });
+            UsuarioEntity.State = false;
             _context.SaveChanges();
-            return Ok();
+            return Ok(new { mensaje = "Usuario eliminado correctamente." });
         }
     }
 }

@@ -29,5 +29,8 @@ namespace MyProjectAPI_Travel.Models.DTO
         [StringLength(100)]
         [Required]
         public string? Mail { get; set; }
+
+        public string? Password { get; set; }
+
     }
 }
