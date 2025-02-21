@@ -66,6 +66,7 @@ namespace MyProjectAPI_Travel.Controllers.Cliente
 
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
 
+
                 return Ok(user);
             }
             catch (Exception ex)
@@ -172,6 +173,22 @@ namespace MyProjectAPI_Travel.Controllers.Cliente
                 _context.SaveChanges();
 
                 return Ok(new { message = "Contraseña actualizada exitosamente" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("get-user")]
+        [Authorize]
+        public IActionResult GetUser()
+        {
+            try
+            {
+                var userEntity = VerificarSesion();
+
+                return Ok(userEntity);
             }
             catch (Exception ex)
             {
