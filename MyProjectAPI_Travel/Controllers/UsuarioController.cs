@@ -18,7 +18,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpGet("all")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult GetAllUsuario()
         {
             try
@@ -34,7 +34,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpGet("{id:int}")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult GetUsuarioById(int id)
         {
             try
@@ -59,7 +59,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpPost("add")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult AddUsuario([FromBody] User model)
         {
             try
@@ -93,7 +93,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpPut("update/{id:int}")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult UpdateUsuario(int id, [FromBody] User model)
         {
             try
@@ -129,7 +129,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpDelete("delete/{id:int}")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult DeleteUsuario(int id)
         {
             if (id <= 0)

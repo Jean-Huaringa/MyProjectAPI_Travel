@@ -17,7 +17,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpGet("all")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult AllSeating()
         {
             try

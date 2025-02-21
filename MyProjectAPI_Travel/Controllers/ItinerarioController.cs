@@ -49,7 +49,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpPost("add")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult AddItinerario([FromBody] Itinerary model)
         {
             try
@@ -84,7 +84,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpPut("update/{id}")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult UpdateItinerario(int id, [FromBody] Itinerary model)
         {
             try
@@ -123,7 +123,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpDelete("delete/{id}")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult DeleteItinerario(int id)
         {
             if (id <= 0)

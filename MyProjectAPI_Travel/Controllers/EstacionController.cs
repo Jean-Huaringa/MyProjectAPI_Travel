@@ -76,7 +76,7 @@ public class EstacionController : ControllerBase
     }
 
     [HttpPost("add")]
-    [Authorize(Roles = "admin")]
+    //[Authorize(Roles = "admin")]
     public IActionResult AddEstacion([FromBody] Station model)
     {
         try
@@ -106,7 +106,7 @@ public class EstacionController : ControllerBase
     }
 
     [HttpPut("update/{id:int}")]
-    [Authorize(Roles = "admin")]
+    //[Authorize(Roles = "admin")]
     public IActionResult UpdateEstacion(int id, [FromBody] Station model)
     {
         try
@@ -138,7 +138,7 @@ public class EstacionController : ControllerBase
     }
 
     [HttpDelete("delete/{id:int}")]
-    [Authorize(Roles = "admin")]
+    //[Authorize(Roles = "admin")]
     public IActionResult DeleteEstacion(int id)
     {
         try

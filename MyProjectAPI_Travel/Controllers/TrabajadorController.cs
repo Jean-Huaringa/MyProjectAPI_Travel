@@ -19,7 +19,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpGet("all")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult GetAllTrabajador()
         {
             try
@@ -40,7 +40,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpGet("{id:int}")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult GetTrabajadorById(int id)
         {
             try
@@ -65,7 +65,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpPost("add")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult AddTrabajador(Worker model)
         {
             try
@@ -101,7 +101,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpPut("update/{id:int}")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult UpdateTrabajador(int id, Worker model)
         {
             try
@@ -131,7 +131,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpDelete("delete/{id:int}")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult DeleteTrabajador(int id)
         {
             if (id <= 0)
