@@ -66,7 +66,7 @@ namespace MyProjectAPI_Travel.Controllers
 
         [HttpPost("add")]
         [Authorize(Roles = "admin")]
-        public IActionResult AddTrabajador(WorkerDTO model)
+        public IActionResult AddTrabajador(Worker model)
         {
             try
             {
@@ -102,7 +102,7 @@ namespace MyProjectAPI_Travel.Controllers
 
         [HttpPut("update/{id:int}")]
         [Authorize(Roles = "admin")]
-        public IActionResult UpdateTrabajador(int id, WorkerDTO model)
+        public IActionResult UpdateTrabajador(int id, Worker model)
         {
             try
             {

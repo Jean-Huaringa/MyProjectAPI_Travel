@@ -77,7 +77,7 @@ public class EstacionController : ControllerBase
 
     [HttpPost("add")]
     [Authorize(Roles = "admin")]
-    public IActionResult AddEstacion([FromBody] StationDTO model)
+    public IActionResult AddEstacion([FromBody] Station model)
     {
         try
         {
@@ -107,7 +107,7 @@ public class EstacionController : ControllerBase
 
     [HttpPut("update/{id:int}")]
     [Authorize(Roles = "admin")]
-    public IActionResult UpdateEstacion(int id, [FromBody] StationDTO model)
+    public IActionResult UpdateEstacion(int id, [FromBody] Station model)
     {
         try
         {

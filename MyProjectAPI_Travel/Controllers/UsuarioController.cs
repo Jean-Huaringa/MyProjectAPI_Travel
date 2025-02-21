@@ -60,7 +60,7 @@ namespace MyProjectAPI_Travel.Controllers
 
         [HttpPost("add")]
         [Authorize(Roles = "admin")]
-        public IActionResult AddUsuario([FromBody] UserDTO model)
+        public IActionResult AddUsuario([FromBody] User model)
         {
             try
             {
@@ -94,7 +94,7 @@ namespace MyProjectAPI_Travel.Controllers
 
         [HttpPut("update/{id:int}")]
         [Authorize(Roles = "admin")]
-        public IActionResult UpdateUsuario(int id, [FromBody] UserDTO model)
+        public IActionResult UpdateUsuario(int id, [FromBody] User model)
         {
             try
             {

@@ -18,7 +18,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpGet("all")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult GetAllBus()
         {
             try
@@ -59,8 +59,8 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpPost("add")]
-        [Authorize(Roles = "admin")]
-        public IActionResult AddBus([FromBody] BusDTO model)
+        //[Authorize(Roles = "admin")]
+        public IActionResult AddBus([FromBody] Bus model)
         {
             try
             {
@@ -90,8 +90,8 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpPut("update/{id:int}")]
-        [Authorize(Roles = "admin")]
-        public IActionResult UpdateBus(int id, [FromBody] BusDTO bus)
+        //[Authorize(Roles = "admin")]
+        public IActionResult UpdateBus(int id, [FromBody] Bus bus)
         {
             try
             {
@@ -123,7 +123,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpDelete("delete/{id:int}")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult DeleteBus(int id)
         {
             if (id <= 0)

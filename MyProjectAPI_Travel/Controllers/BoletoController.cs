@@ -18,7 +18,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpGet("all")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult GetAllBoleto()
         {
             try
@@ -34,7 +34,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpGet("{id:int}")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult GetBoletoById(int id)
         {
             try
@@ -99,7 +99,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpPut("update/{id:int}")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult UpdateBoleto(int id, [FromBody] TicketDTO model)
         {
             try
@@ -141,7 +141,7 @@ namespace MyProjectAPI_Travel.Controllers
         }
 
         [HttpDelete("delete/{id:int}")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public IActionResult DeleteBoleto(int id)
         {
             if (id <= 0)
