@@ -50,7 +50,7 @@ namespace MyProjectAPI_Travel.Controllers
 
         [HttpPost("add")]
         //[Authorize(Roles = "admin")]
-        public IActionResult AddItinerario([FromBody] Itinerary model)
+        public IActionResult AddItinerario([FromBody] ItineraryDTO model)
         {
             try
             {

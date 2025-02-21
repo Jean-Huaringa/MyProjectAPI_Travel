@@ -18,12 +18,12 @@ namespace MyProjectAPI_Travel.Controllers.Cliente
         }
 
         [HttpGet("all/station")]
-        public IActionResult GetAllEstacion()
+        public ActionResult<IEnumerable<object>> GetAllEstacion()
         {
             try
             {
                 var estaciones = _context.TbStations
-                    .Where(e => e.State == true)
+                    .Where(e => e.State)
                     .Select(e => new
                     {
                         e.IdStn,
@@ -33,6 +33,11 @@ namespace MyProjectAPI_Travel.Controllers.Cliente
                     })
                     .ToList();
 
+                if (!estaciones.Any())
+                {
+                    return NotFound("No hay estaciones disponibles.");
+                }
+
                 return Ok(estaciones);
             }
             catch (Exception ex)
@@ -41,23 +46,32 @@ namespace MyProjectAPI_Travel.Controllers.Cliente
             }
         }
 
-        [HttpPost("filter-for-passage")]
-        public IActionResult SearchForPassage(int? idOrigen, int? idDestino, DateTime? fechaInicio)
+        [HttpGet("filter-for-passage")]
+        public IActionResult SearchForPassage([FromQuery] int? idOrigen, [FromQuery] int? idDestino, [FromQuery] DateTime? fechaInicio)
         {
+            try
+            {
+                var filteredItineraries = _context.TbItineraries
+                    .AsNoTracking()
+                    .Where(i => i.State &&
+                                (!idOrigen.HasValue || i.IdOrigin == idOrigen) &&
+                                (!idDestino.HasValue || i.IdDestination == idDestino) &&
+                                (!fechaInicio.HasValue || EF.Functions.DateDiffDay(i.StartDate, fechaInicio) == 0))
+                    .Include(i => i.Origin)
+                    .Include(i => i.Destination)
+                    .ToList();
 
-            var filteredItineraries = _context.TbItineraries
-                .AsNoTracking()
-                .Where(i => i.State == true &&
-                            (!idOrigen.HasValue || i.IdOrigin == idOrigen) &&
-                            (!idDestino.HasValue || i.IdDestination == idDestino) &&
-                            (!fechaInicio.HasValue || EF.Functions.DateDiffDay(i.StartDate, fechaInicio) == 0)
-                            )
-                .Include(r => r.Origin)
-                .Include(r => r.Destination)
-                .ToList();
+                if (!filteredItineraries.Any())
+                {
+                    return NotFound("No se encontraron pasajes con los filtros proporcionados.");
+                }
 
-
-            return Ok(filteredItineraries);
+                return Ok(filteredItineraries);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { mensaje = "Error al filtrar pasajes.", error = ex.Message });
+            }
         }
 
         [HttpGet("search-for-information-passage/{id:int}")]
@@ -71,22 +85,27 @@ namespace MyProjectAPI_Travel.Controllers.Cliente
             var EstacionEntity = _context.TbItineraries
                 .Include(it => it.Origin)
                 .Include(it => it.Destination)
+                .Include(it => it.Bus).ThenInclude(b => b.Seating)
                 .FirstOrDefault(it => it.IdItn == id);
-
 
             if (EstacionEntity == null)
             {
-                return NotFound();
+                return NotFound("No se encontró información del pasaje.");
             }
 
             return Ok(EstacionEntity);
         }
 
-        [HttpPost("buy-ticket/")]
+        [HttpPost("purchase")]
         public IActionResult BuyTicket([FromBody] TicketDTO model)
         {
             try
             {
+                if (model == null)
+                {
+                    return BadRequest("El cuerpo de la solicitud no puede estar vacío.");
+                }
+
                 if (!ModelState.IsValid)
                 {
                     return BadRequest(ModelState);
@@ -113,11 +132,11 @@ namespace MyProjectAPI_Travel.Controllers.Cliente
                 _context.TbTickets.Add(ticketEntity);
                 _context.SaveChanges();
 
-                return Ok(new { mensaje = "El boleto se registro con exito" });
+                return Ok(new { mensaje = "El boleto se registró con éxito." });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { mensaje = "", error = ex.Message });
+                return StatusCode(500, new { mensaje = "Hubo un error al registrar el boleto.", error = ex.Message });
             }
         }
     }
