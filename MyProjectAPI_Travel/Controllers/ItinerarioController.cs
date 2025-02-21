@@ -1,13 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MyProjectAPI_Travel.Data;
 using MyProjectAPI_Travel.Models;
+using MyProjectAPI_Travel.Models.DTO;
 
 namespace MyProjectAPI_Travel.Controllers
 {
-    //[Route("Itinerario")]
-    public class ItinerarioController : Controller
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ItinerarioController : ControllerBase
     {
         private readonly MyProjectTravelContext _context;
 
@@ -16,75 +18,48 @@ namespace MyProjectAPI_Travel.Controllers
             _context = context;
         }
 
-        [HttpGet]
-        public IActionResult GetAllItinerario()
+        [HttpGet("all")]
+        //[Authorize(Roles = "admin")]
+        public IActionResult GetAllItinerarios()
         {
-            var allItinerario = _context.TbItineraries
-                .Include(r => r.Origin)
-                .Include(d => d.Destination)
-                .Include(t => t.Worker).ThenInclude(t => t.Users)
-                .Include(b => b.Bus)
-                .ToList();
+            var allItinerarios = _context.TbItineraries.Where(e => e.State == true).ToList();
 
-            return View(allItinerario);
+            return Ok(allItinerarios);
         }
 
-        [HttpGet]
+        [HttpGet("{id:int}")]
         public IActionResult GetItinerarioById(int id)
         {
             if (id <= 0)
             {
-                Console.WriteLine("El objeto es null.");
+                return BadRequest(new { mensaje = "No se ingreso el ID." });
             }
 
-            var ItinerarioEntity = _context.TbItineraries
+            var itinerarioEntity = _context.TbItineraries
                 .Include(r => r.Origin)
                 .Include(d => d.Destination)
-                .Include(t => t.Worker).ThenInclude(t => t.Users)
+                .Include(t => t.Worker).ThenInclude(t => t.User)
                 .Include(b => b.Bus)
                 .FirstOrDefault(e => e.IdItn == id && e.State == true);
 
-            if (ItinerarioEntity is null)
-                return View(new Itinerary());
+            if (itinerarioEntity is null)
+                return NotFound(new { mensaje = "Itinerario no encontrado." });
 
-            return View(ItinerarioEntity);
+            return Ok(itinerarioEntity);
         }
 
-        [HttpGet]
-        public IActionResult AddItinerario()
-        {
-            try
-            {
-                var estaciones = _context.TbStations.Where(e => e.State == true).ToList();
-                var bus = _context.TbBus.Where(e => e.State == true).ToList();
-                var trabajador = _context.TbWorkers
-                    .Include(t => t.Users)
-                    .Where(e => e.State == true && e.Role == "seller").ToList();
-
-
-                ViewBag.Estaciones = new SelectList(estaciones, "Id", "Ciudad");
-                ViewBag.Bus = new SelectList(bus, "Id", "Placa");
-                ViewBag.Trabajador = new SelectList(trabajador, "Id", "Usuario.Nombre");
-
-                return View(new Itinerary());
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = "Error al ingresar el bus.", error = ex.Message });
-            }
-        }
-
-        [HttpPost]
-        public IActionResult AddItinerario(Itinerary model)
+        [HttpPost("add")]
+        [Authorize(Roles = "admin")]
+        public IActionResult AddItinerario([FromBody] Itinerary model)
         {
             try
             {
                 if (model is null)
                 {
-                    Console.WriteLine("El objeto es null.");
+                    return BadRequest(new { mensaje = "El objeto proporcionado es nulo." });
                 }
 
-                var ItinerarioEntity = new Itinerary()
+                var itinerarioEntity = new Itinerary()
                 {
                     IdOrigin = model.IdOrigin,
                     IdDestination = model.IdDestination,
@@ -92,119 +67,79 @@ namespace MyProjectAPI_Travel.Controllers
                     IdBus = model.IdBus,
                     StartDate = model.StartDate,
                     ArrivalDate = model.ArrivalDate,
-                    Price = model.Price
+                    Price = model.Price,
+                    Availability = true,
+                    State = true
                 };
 
-                _context.TbItineraries.Add(ItinerarioEntity);
+                _context.TbItineraries.Add(itinerarioEntity);
                 _context.SaveChanges();
 
-                return View(ItinerarioEntity);
+                return CreatedAtAction(nameof(GetItinerarioById), new { id = itinerarioEntity.IdItn }, itinerarioEntity);
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { mensaje = "Error al ingresar el bus.", error = ex.Message });
+                return StatusCode(500, new { mensaje = "Error al agregar el itinerario.", error = ex.Message });
             }
         }
 
-        [HttpGet]
-        public IActionResult UpdateItinerario(int id)
+        [HttpPut("update/{id}")]
+        [Authorize(Roles = "admin")]
+        public IActionResult UpdateItinerario(int id, [FromBody] Itinerary model)
         {
-            if (!User.IsInRole("admin"))
-            {
-                return RedirectToAction("Home", "User");
-            }
             try
             {
                 if (id <= 0)
                 {
-                    Console.WriteLine("El objeto es null.");
+                    return BadRequest(new { mensaje = "No se ingreso el ID." });
                 }
 
-                var ItinerarioEntity = _context.TbItineraries
-                .Include(r => r.Origin)
-                .Include(d => d.Destination)
-                .Include(t => t.Worker).ThenInclude(t => t.Users)
-                .Include(b => b.Bus)
-                .FirstOrDefault(e => e.IdItn == id && e.State == true);
-
-                var estaciones = _context.TbStations.Where(e => e.State == true).ToList();
-                var bus = _context.TbBus.Where(e => e.State == true).ToList();
-                var trabajador = _context.TbWorkers
-                    .Include(t => t.Users)
-                    .Where(e => e.State == true && e.Role == "seller").ToList();
-
-                if (ItinerarioEntity is null)
-                    return NotFound();
-
-                _context.SaveChanges();
-
-                ViewBag.Estaciones = new SelectList(estaciones, "Id", "Ciudad");
-                ViewBag.Bus = new SelectList(bus, "Id", "Placa");
-                ViewBag.Trabajador = new SelectList(trabajador, "Id", "Usuario.Nombre");
-
-                return View(ItinerarioEntity);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { mensaje = "Error al actualizar el bus.", error = ex.Message });
-            }
-        }
-
-        [HttpPost]
-        public IActionResult UpdateItinerario(int id, Itinerary model)
-        {
-            if (!User.IsInRole("admin"))
-            {
-                return RedirectToAction("Home", "User");
-            }
-            try
-            {
-                if(id <= 0)
-                {
-                    Console.WriteLine("El objeto es null.");
-                }
                 if (model is null)
                 {
-                    Console.WriteLine("El objeto es null.");
+                    return BadRequest(new { mensaje = "El objeto proporcionado es nulo." });
                 }
 
-                var ItinerarioEntity = _context.TbItineraries.Find(id);
-                if (ItinerarioEntity is null)
-                    return NotFound();
+                var itinerarioEntity = _context.TbItineraries.Find(id);
+                if (itinerarioEntity is null)
+                    return NotFound(new { mensaje = "Itinerario no encontrado." });
 
-                ItinerarioEntity.IdOrigin = model.IdOrigin;
-                ItinerarioEntity.IdDestination = model.IdDestination;
-                ItinerarioEntity.IdWrk = model.IdWrk;
-                ItinerarioEntity.IdBus = model.IdBus;
-                ItinerarioEntity.StartDate = model.StartDate;
-                ItinerarioEntity.ArrivalDate = model.ArrivalDate;
-                ItinerarioEntity.Price = model.Price;
+                itinerarioEntity.IdOrigin = model.IdOrigin;
+                itinerarioEntity.IdDestination = model.IdDestination;
+                itinerarioEntity.IdWrk = model.IdWrk;
+                itinerarioEntity.IdBus = model.IdBus;
+                itinerarioEntity.StartDate = model.StartDate;
+                itinerarioEntity.ArrivalDate = model.ArrivalDate;
+                itinerarioEntity.Price = model.Price;
+                itinerarioEntity.Availability = true;
 
                 _context.SaveChanges();
 
-                return View(ItinerarioEntity);
+                return Ok(new { mensaje = "Itinerario actualizada correctamente." });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { mensaje = "Error al actualizar el bus.", error = ex.Message });
+                return StatusCode(500, new { mensaje = "Error al actualizar el itinerario.", error = ex.Message });
             }
         }
 
-        [HttpDelete]
+        [HttpDelete("delete/{id}")]
+        [Authorize(Roles = "admin")]
         public IActionResult DeleteItinerario(int id)
         {
             if (id <= 0)
             {
-                Console.WriteLine("El objeto es null.");
+                return BadRequest(new { mensaje = "No se ingreso el ID." });
             }
 
-            var ItinerarioEntity = _context.TbItineraries.Find(id);
-            if (ItinerarioEntity is null)
-                return NotFound();
-            _context.TbItineraries.Remove(ItinerarioEntity);
-            _context.SaveChanges();
-            return Ok();
-        }
+            var itinerarioEntity = _context.TbItineraries.Find(id);
+            if (itinerarioEntity is null)
+                return NotFound(new { mensaje = "Itinerario no encontrado." });
 
+            itinerarioEntity.State = false;
+
+            _context.SaveChanges();
+
+            return Ok(new { mensaje = "Itinerario eliminado correctamente." });
+        }
     }
 }

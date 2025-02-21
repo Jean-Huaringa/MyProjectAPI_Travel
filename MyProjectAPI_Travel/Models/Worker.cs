@@ -18,6 +18,7 @@ namespace MyProjectAPI_Travel.Models
         public decimal Salary { get; set; }
 
         [Column("role")]
+        [Required]
         public string? Role { get; set; }
 
         [Column("availability")]
@@ -29,7 +30,7 @@ namespace MyProjectAPI_Travel.Models
         public bool State { get; set; }
 
         [ForeignKey("IdWrk")]
-        public virtual User Users { get; set; } = null!;
+        public virtual User User { get; set; } = null!;
 
         [InverseProperty("Worker")]
         public virtual ICollection<Itinerary> Itineraries { get; set; } = new List<Itinerary>();
