@@ -6,6 +6,8 @@ using MyProjectAPI_Travel.Models.DTO;
 
 namespace MyProjectAPI_Travel.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]")]
     public class BoletoController : ControllerBase
     {
         private readonly MyProjectTravelContext _context;
@@ -81,7 +83,8 @@ namespace MyProjectAPI_Travel.Controllers
                     Lastname = model.Lastname,
                     Age = model.Age,
                     TypeDocument = model.TypeDocument,
-                    NumDocument = model.NumDocument
+                    NumDocument = model.NumDocument,
+                    State = true
                 };
 
                 _context.TbTickets.Add(ticketEntity);

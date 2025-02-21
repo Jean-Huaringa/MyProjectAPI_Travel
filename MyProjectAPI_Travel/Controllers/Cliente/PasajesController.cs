@@ -106,7 +106,8 @@ namespace MyProjectAPI_Travel.Controllers.Cliente
                     Lastname = model.Lastname,
                     Age = model.Age,
                     TypeDocument = model.TypeDocument,
-                    NumDocument = model.NumDocument
+                    NumDocument = model.NumDocument,
+                    State = true
                 };
 
                 _context.TbTickets.Add(ticketEntity);

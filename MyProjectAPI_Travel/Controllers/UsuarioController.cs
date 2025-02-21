@@ -77,7 +77,8 @@ namespace MyProjectAPI_Travel.Controllers
                     Birthdate = model.Birthdate,
                     TypeDocument = model.TypeDocument,
                     NumDocument = model.NumDocument,
-                    Mail = model.Mail
+                    Mail = model.Mail,
+                    State = true
                 };
 
                 _context.TbUsers.Add(UsuarioEntity);

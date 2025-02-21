@@ -66,7 +66,7 @@ namespace MyProjectAPI_Travel.Controllers.Cliente
 
                 await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
 
-                return Ok(new { message = "Inicio de sesión exitoso", role });
+                return Ok(user);
             }
             catch (Exception ex)
             {
@@ -88,10 +88,6 @@ namespace MyProjectAPI_Travel.Controllers.Cliente
         {
             try
             {
-                if (!User.IsInRole("invitado"))
-                {
-                    return BadRequest(new { message = "No tienes acceso" });
-                }
 
                 var existingUser = _context.TbUsers.FirstOrDefault(u => u.Mail == model.Mail || u.NumDocument == model.NumDocument);
                 if (existingUser != null)

@@ -74,7 +74,8 @@ namespace MyProjectAPI_Travel.Controllers
                     Placa = model.Placa,
                     Model = model.Model,
                     NumColumns = model.NumColumns,
-                    NumRows = model.NumRows
+                    NumRows = model.NumRows,
+                    State = true
                 };
 
                 _context.TbBus.Add(busEntity);
